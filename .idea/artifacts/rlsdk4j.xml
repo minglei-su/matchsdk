@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="rlsdk4j">
+    <output-path>$PROJECT_DIR$/out/artifacts/rlsdk4j</output-path>
+    <root id="archive" name="rlsdk4j.jar">
+      <element id="module-output" name="rlsdkfor4" />
+      <element id="library" level="project" name="commons-beanutils-1.7.0" />
+    </root>
+  </artifact>
+</component>
