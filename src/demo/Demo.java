@@ -17,7 +17,7 @@ public class Demo {
     public void test() {
         Query query = new Query();
         Entity[] result;
-        Entity entity = new Entity("1","中国人民银行","海淀市","100010");
+        Entity entity = new Entity("1","中国人民银行","海淀市",null);
         if (query.add(entity)) {
             System.out.println("add success");
         }
@@ -32,12 +32,14 @@ public class Demo {
             }
         }
         //删除索引
-//        query.deleteIndexById("1");
-//        result = query.queryMatchedByPost(new Entity("人民银行"),10);
-//        if (result != null) {
-//            for (int index = 0; index < result.length; index++) {
-//                System.out.print("result is " +  result[index].getName());
-//            }
-//        }
+        if(query.deleteIndexById("122")) {
+            System.out.println("delete success!");
+        }
+        result = query.queryMatchedByPost(new Entity("人民银行"),10);
+        if (result != null) {
+            for (int index = 0; index < result.length; index++) {
+                System.out.print("result is " +  result[index].getName());
+            }
+        }
     }
 }

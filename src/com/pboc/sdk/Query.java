@@ -2,10 +2,7 @@ package com.pboc.sdk;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
@@ -36,7 +33,7 @@ public class Query {
     public Query( ) {
         try {
             Properties properties = new Properties();
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(Constants.CONFIG_PATH));
+            InputStream inputStream = new BufferedInputStream(new FileInputStream(System.getProperty("user.dir")+Constants.CONFIG_PATH));
             properties.load(inputStream);
             serverurl = properties.getProperty("server.url");
             rules = properties.getProperty("match.rule");
@@ -81,7 +78,6 @@ public class Query {
         try {
             client.executeMethod(method);
             return convertJson2Entity(method.getResponseBodyAsString());
-  //          list = convert2Map(method.getResponseBodyAsStream());
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -104,7 +100,9 @@ public class Query {
                 JSONArray jsonArray = response.getJSONArray("docs");
                 for (int index = 0; index < jsonArray.size(); index++) {
                     JSONObject object = jsonArray.getJSONObject(index);
-                    object = object.accumulate("areacode",object.getString("code_s"));
+                    if (object.get("code_s") != null) {
+                        object = object.accumulate("areacode",object.getString("code_s"));
+                    }
                     Entity entity1 = (Entity) JSONObject.toBean(object, Entity.class);
                     entity[index] = entity1;
                 }
@@ -135,7 +133,7 @@ public class Query {
         try {
             method.setRequestEntity(new StringRequestEntity(array.toString(),null,"utf-8"));
             client.executeMethod(method);
-            return flush();
+            return returnHttpResult(method.getResponseBodyAsString());
         } catch (Exception e) {
             e.printStackTrace();
             method.releaseConnection();
@@ -161,7 +159,7 @@ public class Query {
         postMethod.setRequestEntity(new StringRequestEntity(jsonObject1.toString()));
         try {
             client.executeMethod(postMethod);
-            return flush();
+            return returnHttpResult(postMethod.getResponseBodyAsString());
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -169,16 +167,23 @@ public class Query {
             postMethod.releaseConnection();
         }
     }
-
+    private boolean returnHttpResult(String response) {
+        JSONObject jsonObject = JSONObject.fromObject(response);
+        int status = jsonObject.getJSONObject("responseHeader").getInt("status");
+        if (status == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     /**
-     * 提交缓存,成功返回true，错误返回false
+     * 提交缓存,成功返回true，错误返回false,批量时使用
      */
     public boolean flush() {
         GetMethod getMethod = new GetMethod(serverurl + Constants.FLUSH_SOLR);
         try {
             client.executeMethod(getMethod);
             JSONObject jsonObject = JSONObject.fromObject(getMethod.getResponseBodyAsString());
-            //BufferedReader reader = new BufferedReader(new InputStreamReader(getMethod.getResponseBodyAsStream()));
             int status = jsonObject.getJSONObject("responseHeader").getInt("status");
             if (status == 0) {
                 return true;
